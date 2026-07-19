@@ -42,7 +42,7 @@
   </a>
 
   <a href="https://ko-fi.com/jeffreytse">
-    <img height="20" src="https://www.ko-fi.com/img/githubbutton_sm.svg"
+    <img height="20" src="https://ko-fi.com/img/githubbutton_sm.svg"
       alt="Donate (Ko-fi)" />
   </a>
 
@@ -64,6 +64,12 @@
   <a href="https://github.com/jeffreytse/zsh-vi-mode/graphs/contributors">contributors </a>
 </div>
 <br>
+
+> 🧙 **Check out my new project — [Grimoire](https://github.com/jeffreytse/grimoire)**:
+> a free, open-source package manager for best practices — 1000+ skills across 26
+> domains (engineering, law, finance, design, health, and more), each sourced from a
+> real institution or study. Install once, and your AI routes to the right skill
+> automatically. ⭐ Star it if you find it useful!
 
 <img alt="Zsh Vi-mode Demo" src="https://user-images.githubusercontent.com/9413601/105746868-f3734a00-5f7a-11eb-8db5-22fcf50a171b.gif" />
 
@@ -519,6 +525,32 @@ or using win32yank:
 ZVM_CLIPBOARD_COPY_CMD='win32yank.exe -i --crlf'
 ZVM_CLIPBOARD_PASTE_CMD='win32yank.exe -o --lf'
 ```
+
+### OSC 52 (Remote Clipboard)
+
+OSC 52 is an escape sequence that allows copying text to the clipboard over SSH or in tmux sessions without requiring X11 forwarding or other clipboard tools.
+
+Enable OSC 52:
+
+```zsh
+ZVM_SYSTEM_CLIPBOARD_ENABLED=true
+ZVM_CLIPBOARD_USE_OSC52=true
+```
+
+By default, the plugin automatically detects if you're in a tmux session (via the `$TMUX` variable) and wraps the escape sequence accordingly. You can control this behavior:
+
+```zsh
+# Always use tmux wrapping (even if not in tmux)
+ZVM_CLIPBOARD_OSC52_TMUX=true
+
+# Never use tmux wrapping (even if in tmux)
+ZVM_CLIPBOARD_OSC52_TMUX=false
+
+# Auto-detect (default behavior, check $TMUX variable)
+ZVM_CLIPBOARD_OSC52_TMUX=
+```
+
+Note: OSC 52 requires your terminal emulator and tmux (if used) to support clipboard integration. Most modern terminals support this feature.
 
 Open Under Cursor
 ----------------
