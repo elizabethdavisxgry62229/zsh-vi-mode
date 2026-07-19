@@ -202,6 +202,23 @@
 # If you don't set these two commands, the plugin will try to detect them
 # automatically for you.
 #
+# ZVM_CLIPBOARD_USE_OSC52
+# use OSC 52 escape sequence for clipboard (default is false), this is useful
+# for remote sessions over SSH or when using tmux, it allows copying text to
+# the local clipboard without requiring X11 forwarding or other clipboard tools
+#
+# For example:
+#   ZVM_CLIPBOARD_USE_OSC52=true
+#
+# ZVM_CLIPBOARD_OSC52_TMUX
+# auto-detect tmux for OSC 52 wrapping (default is to check TMUX variable),
+# you can set this to 'true' to always enable tmux wrapping, or 'false' to
+# always disable it
+#
+# For example:
+#   ZVM_CLIPBOARD_OSC52_TMUX=true    # Always use tmux wrapping
+#   ZVM_CLIPBOARD_OSC52_TMUX=false   # Never use tmux wrapping
+#
 # ZVM_OPEN_CMD
 # the command for opening URL or file path (e.g. `xdg-open`, `open`, `start`
 # and so on)
@@ -364,6 +381,10 @@ fi
 : ${ZVM_SYSTEM_CLIPBOARD_ENABLED:=false}
 : ${ZVM_CLIPBOARD_COPY_CMD:=}
 : ${ZVM_CLIPBOARD_PASTE_CMD:=}
+# Use OSC 52 escape sequence for clipboard (useful for SSH/TMUX)
+: ${ZVM_CLIPBOARD_USE_OSC52:=false}
+# Auto-detect tmux for OSC 52 wrapping (default is to check TMUX variable)
+: ${ZVM_CLIPBOARD_OSC52_TMUX:=}
 
 # Open URL or file path feature
 : ${ZVM_OPEN_CMD:=}
@@ -3586,9 +3607,30 @@ function zvm_clipboard_available() {
   return 1
 }
 
+# Copy text using OSC 52 escape sequence
+function zvm_clipboard_copy_osc52() {
+  local text="$1"
+  local encoded=$(printf %s "$text" | base64)
+  local osc52="\033]52;c;${encoded}\a"
+
+  # Check if we should wrap for tmux
+  if [[ -n $ZVM_CLIPBOARD_OSC52_TMUX ]] || [[ -n $TMUX && -z $ZVM_CLIPBOARD_OSC52_TMUX ]]; then
+    osc52="\033Ptmux;\033${osc52}\033\\"
+  fi
+
+  printf "$osc52"
+}
+
 # Copy CUTBUFFER to system clipboard
 function zvm_clipboard_copy_buffer() {
   $ZVM_SYSTEM_CLIPBOARD_ENABLED || return
+
+  # Use OSC 52 escape sequence if enabled
+  if $ZVM_CLIPBOARD_USE_OSC52; then
+    zvm_clipboard_copy_osc52 "$CUTBUFFER"
+    return
+  fi
+
   zvm_clipboard_available || return
   print -rn -- "$CUTBUFFER" | eval "$ZVM_CLIPBOARD_COPY_CMD" >/dev/null 2>&1
 }
